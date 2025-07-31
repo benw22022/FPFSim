@@ -165,6 +165,7 @@ Older versions of FORESEE output events in the HepMC2 format. To run over HepMC2
 |/det/faser/trackingScinThick | option for scintillator bar thickness (along Z) in tracking layers                   |`1.0 cm`|
 |/det/faser/trackingGap       | option for gap length (along Z) between tracking stations, and gap to magnet         |`0.5 m`|
 |/det/faser/fillCaloAndWall| option to fill FASER2 iron wall and calorimeter placeholder volumes with metal if true. Otherwise, fill with air to save having to compute the additional material interactions. |`true`|
+|/det/faser/decayVolMat| option to change the gas filling the FASER2 decay volume. Options are `AIR` or `HELIUM`. |`AIR`|
 
 ### Event generators
 

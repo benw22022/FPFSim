@@ -26,6 +26,7 @@ class DetectorConstructionMaterial {
     G4Material *LiquidArgon, *LiquidKrypton, *LS, *Rock, *polystyrene;
     G4Material *fibrous_glass, *polyurethane_foam, *R_PUF;
     G4Material *Emulsion, *ARMCO, *Polyethylene;
+    G4Material *HeliumGas;  
 };
 
 #endif

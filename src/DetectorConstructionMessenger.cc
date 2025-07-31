@@ -221,6 +221,12 @@ DetectorConstructionMessenger::DetectorConstructionMessenger(DetectorConstructio
     faserFillCaloAndWallCmd = new G4UIcmdWithABool("/det/faser/fillCaloAndWall", this);
     faserFillCaloAndWallCmd->SetParameterName("Fill FASER2 'calorimeters' and Iron wall with material", true);
     faserFillCaloAndWallCmd->SetDefaultValue(false);
+    // Decay volume
+    faserDecayVolMatCmd = new G4UIcmdWithAString("/det/faser/decayVolMat", this);
+    faserDecayVolMatCmd->SetGuidance("Set the decay volume material");
+    faserDecayVolMatCmd->SetCandidates("AIR HELIUM");
+    faserDecayVolMatCmd->SetDefaultValue("AIR");
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -281,6 +287,7 @@ DetectorConstructionMessenger::~DetectorConstructionMessenger() {
   delete faserTrackingScinThickCmd;
   delete faserTrackingGapCmd;
   delete faserFillCaloAndWallCmd;
+  delete faserDecayVolMatCmd;
 
   delete detDir;
   delete flareDir;
@@ -403,6 +410,15 @@ void DetectorConstructionMessenger::SetNewValue(G4UIcommand* command, G4String n
     GeometricalParameters::Get()->SetTrackingStationGap(faserTrackingGapCmd->ConvertToDimensionedDouble(newValues));
   else if (command == faserFillCaloAndWallCmd)
     GeometricalParameters::Get()->SetFillCaloAndWallVolumes(faserFillCaloAndWallCmd->GetNewBoolValue(newValues));
+  else if (command == faserDecayVolMatCmd) {
+    if (newValues == "AIR") {
+      GeometricalParameters::Get()->SetFASER2DecayVolumeMaterial(GeometricalParameters::decayVolOption::AIR);
+    } else if (newValues == "HELIUM") {
+      GeometricalParameters::Get()->SetFASER2DecayVolumeMaterial(GeometricalParameters::decayVolOption::HELIUM);
+    } else {
+      G4Exception("DetectorConstructionMessenger::SetNewValue", "InvalidCommand", FatalException, "Unknown decay volume material");
+    }
+  }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

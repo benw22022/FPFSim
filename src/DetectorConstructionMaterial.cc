@@ -77,6 +77,8 @@ DetectorConstructionMaterial::DetectorConstructionMaterial() {
   a = 39.95*g/mole;
   ArgonGas = new G4Material(name="ArgonGas",z=18.,a,density);
 
+  HeliumGas = nist->FindOrBuildMaterial("G4_He");
+
   density = 8.96*g/cm3;
   a = 58.69*g/mole;
   Nickel = new G4Material(name="Nickel",z=28.,a,density);
@@ -219,6 +221,7 @@ G4Material* DetectorConstructionMaterial::Material(G4String what) {
   if(what == "Tungsten")           material = Tungsten;
   if(what == "Lead")               material = Lead;
   if(what == "ArgonGas")           material = ArgonGas;
+  if(what == "HeliumGas")          material = HeliumGas;
   if(what == "StainlessSteel")     material = StainlessSteel;
   if(what == "Nickel")             material = Nickel;
   if(what == "LiquidScintillator") material = LS;

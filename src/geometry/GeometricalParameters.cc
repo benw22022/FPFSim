@@ -59,6 +59,7 @@ GeometricalParameters::GeometricalParameters()
   // FASER2 magnet
   fAddFASER2 = false; //default
   fFASER2MagnetOption = magnetOption::SAMURAI;
+  fFASER2DecayVolumeOption = decayVolOption::AIR; //default
   fFASER2MagnetField = 1.0*tesla;
   fMagnetTotalSizeZ = 4*m; //updates during construction
   fTrackingStationTotalSizeZ = 2.62*m; //updates during construction
@@ -173,4 +174,15 @@ G4ThreeVector GeometricalParameters::GetFASER2MagnetField()
   else
     return G4ThreeVector(0.,0.,0.);
 }
+
+
+// decayVolOption GeometricalParameters::ConvertStringToDecayVolOption()
+// {
+//   if (fFASER2DecayVolumeOption == magnetOption::SAMURAI )
+//     return G4ThreeVector(0.,fFASER2MagnetField,0.); //field along Y
+//   else if (fFASER2DecayVolumeOption == magnetOption::CrystalPulling)     
+//     return G4ThreeVector(0.,fFASER2MagnetField,0.); //field along Y (for now, FIXME?)
+//   else
+//     return G4ThreeVector(0.,0.,0.);
+// }
 

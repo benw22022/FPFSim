@@ -97,11 +97,18 @@ class GeometricalParameters  {
     void SetUseBabyMIND(G4bool val) { fUseBabyMIND = val; }
     void SetBabyMINDTotalSizeZ(G4double val) { fBabyMINDTotalSizeZ = val; }
 
+    // FASER2 Decay Volume
+    enum decayVolOption {AIR, HELIUM};
+    // decayVolOption ConvertStringToDecayVolOption(G4String val);
+    void SetFASER2DecayVolumeMaterial(decayVolOption val) { fFASER2DecayVolumeOption = val; }
+    decayVolOption GetFASER2DecayVolumeMaterial() { return fFASER2DecayVolumeOption; }
+
     // FASER2 Spectrometer Magnet
     enum magnetOption{ SAMURAI, CrystalPulling, unknown};
     magnetOption ConvertStringToMagnetOption(G4String val);
     void SetFASER2MagnetOption(magnetOption val) { fFASER2MagnetOption = val; }
     magnetOption GetFASER2MagnetOption() { return fFASER2MagnetOption; }
+    
     void SetFASER2MagnetField(G4double val) { fFASER2MagnetField = val; }
     G4ThreeVector GetFASER2MagnetField();
     void SetMagnetTotalSizeZ(G4double val) { fMagnetTotalSizeZ = val; }
@@ -287,6 +294,7 @@ class GeometricalParameters  {
 
     // FASER2 Spectrometer Magnet
     magnetOption fFASER2MagnetOption;
+    decayVolOption fFASER2DecayVolumeOption;
     G4double fFASER2MagnetField;
     G4double fMagnetTotalSizeZ;
     G4double fTrackingStationTotalSizeZ;

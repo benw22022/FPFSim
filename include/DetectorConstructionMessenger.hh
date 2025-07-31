@@ -105,6 +105,8 @@ class DetectorConstructionMessenger: public G4UImessenger {
     G4UIcmdWithADoubleAndUnit* faserTrackingScinThickCmd;
     G4UIcmdWithADoubleAndUnit* faserTrackingGapCmd;
     G4UIcmdWithABool* faserFillCaloAndWallCmd;
+    // Decay volume
+    G4UIcmdWithAString* faserDecayVolMatCmd;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

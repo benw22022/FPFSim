@@ -105,8 +105,24 @@ FASER2DetectorConstruction::FASER2DetectorConstruction()
   //* Place decay volume
   componentPosition += fScinThickness/2 + fDecayVolumeLength/2; //* We'll increment this variable as we move through the detector to place things
   G4VSolid* decayVolBox = new G4Box("decayVolBox", GeometricalParameters::Get()->GetFASER2MagnetWindowX()/2, GeometricalParameters::Get()->GetFASER2MagnetWindowY()/2, fDecayVolumeLength/2);
-  fDecayVolumeLogical  = new G4LogicalVolume(decayVolBox, fMaterials->Material("Air"), "FASER2DecayVolLogical");
-  
+
+  GeometricalParameters::decayVolOption decayVolOpt = GeometricalParameters::Get()->GetFASER2DecayVolumeMaterial();
+  if (decayVolOpt == GeometricalParameters::decayVolOption::AIR)
+  {
+    fDecayVolumeLogical  = new G4LogicalVolume(decayVolBox, fMaterials->Material("Air"), "FASER2DecayVolLogical");
+    G4cout << "FASER2 decay volume set to AIR" << G4endl;
+  }
+  else if (decayVolOpt == GeometricalParameters::decayVolOption::HELIUM)
+  {
+    G4cout << "FASER2 decay volume set to HELIUM" << G4endl;
+    fDecayVolumeLogical  = new G4LogicalVolume(decayVolBox, fMaterials->Material("HeliumGas"), "FASER2DecayVolLogical");
+  }
+  else
+  {
+    G4cout << "ERROR: Unknown FASER2 decay volume material option!" << G4endl;
+    fDecayVolumeLogical  = new G4LogicalVolume(decayVolBox, fMaterials->Material("Air"), "FASER2DecayVolLogical");
+  }
+    
   new G4PVPlacement(noRot, G4ThreeVector(0,0, componentPosition), fDecayVolumeLogical, "FASER2DecayVolPhysical", fFASER2Assembly, false, 0, true);
   
   //* Place upstream tracking stations
