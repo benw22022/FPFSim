@@ -166,6 +166,7 @@ void AnalysisManager::bookEvtTree() {
     acts_hits_tree->Branch("event_id"               , &ActsHitsEventID,     "event_id/i");
     acts_hits_tree->Branch("geometry_id"            , &ActsHitsGeometryID,  "geometryid/l");
     acts_hits_tree->Branch("particle_id"            , &ActsHitsParticleID,  "particle_id/l");
+    acts_hits_tree->Branch("pdgc"                   , &ActsHitsPDGC,        "pdg_code/I");
     acts_hits_tree->Branch("tx"                     , &ActsHitsX,           "tx/F");
     acts_hits_tree->Branch("ty"                     , &ActsHitsY,           "ty/F");
     acts_hits_tree->Branch("tz"                     , &ActsHitsZ,           "tz/F");
@@ -191,6 +192,7 @@ void AnalysisManager::bookEvtTree() {
     acts_particles_tree->Branch("particle_id"            , &ActsParticlesParticleId);
     acts_particles_tree->Branch("particle_type"          , &ActsParticlesParticleType);
     acts_particles_tree->Branch("process"                , &ActsParticlesProcess);
+    acts_particles_tree->Branch("pdgc"                   , &ActsParticlesPDGC);
     acts_particles_tree->Branch("vx"                     , &ActsParticlesVx);
     acts_particles_tree->Branch("vy"                     , &ActsParticlesVy);
     acts_particles_tree->Branch("vz"                     , &ActsParticlesVz);
@@ -400,6 +402,7 @@ void AnalysisManager::BeginOfEvent() {
   ActsHitsApproachID = 0;
   ActsHitsSensitiveID = 0;
 
+  ActsParticlesPDGC.clear();
   ActsParticlesParticleId.clear();
   ActsParticlesParticleType.clear();
   ActsParticlesProcess.clear();
@@ -688,7 +691,21 @@ void AnalysisManager::FillPrimaryTruthTree(G4int sdId, std::string sdName)
   {
     auto hitCollection = dynamic_cast<FASER2TrackerHitsCollection*>(hcofEvent->GetHC(sdId));
     if (!hitCollection) return;
-    std::map<G4int, G4int> sub_part_map{};
+    
+    //* Work out number of hits each particle has; don't like the idea of having to loop through the hits twice, but this is the only way I can think of to do it
+    std::map<G4int, G4int> particle_nhits_map{};
+    for (auto hit: *hitCollection->GetVector()) 
+    {
+      if (particle_nhits_map.count(hit->GetTrackID()) == 0)
+      {
+        particle_nhits_map[hit->GetTrackID()] = 1;
+      }
+      else
+      { 
+        particle_nhits_map[hit->GetTrackID()]++;
+      }
+    }
+
     for (auto hit: *hitCollection->GetVector()) 
     {
       if (hit->GetCharge() == 0) continue; // skip neutral particles, they don't hit
@@ -700,7 +717,7 @@ void AnalysisManager::FillPrimaryTruthTree(G4int sdId, std::string sdName)
        here in GEANT4 but I don't understand the Acts code well enough to do it without adding Acts as a dependancy to this codebase.
        As a result I set `geometry_id` to zero and give the the resposibility of assigning this variable to the user during the reading of the `hits` tree.
       */
-
+      
       ActsHitsEventID = evtID;
       ActsHitsGeometryID = 0;
       
@@ -708,17 +725,15 @@ void AnalysisManager::FillPrimaryTruthTree(G4int sdId, std::string sdName)
       int nPrimaries = ActsParticlesParticleId.size();
 
       auto particleId = ActsFatras::Barcode();
-      particleId.setVertexPrimary(1);
-      particleId.setVertexSecondary(0);
-      particleId.setParticle(hit->GetTrackID() - 1); // The track ID is the primary particle index plus one
-      particleId.setGeneration(hit->GetParentID());
 
-      sub_part_map.try_emplace(hit->GetTrackID()-1, sub_part_map.size());
-      
-      // This is a fudge - assumes that that the secondary particles are always sub-particles of the primary particle
-      particleId.setSubParticle(hit->GetParentID() == 0 ? 0 : sub_part_map[hit->GetTrackID()-1]);
+      particleId.setVertexPrimary(hit->GetParentID());
+      particleId.setVertexSecondary(0); // Dunno if this needs to be set
+      particleId.setParticle(abs(hit->GetPDGID()));
+      particleId.setGeneration(hit->GetParentID());
+      particleId.setSubParticle(hitID);
       ActsHitsParticleID = particleId.value();
 
+      ActsHitsPDGC = hit->GetPDGID();
       ActsHitsX = hit->GetX();
       ActsHitsY = hit->GetY();
       ActsHitsZ = hit->GetZ();
@@ -741,8 +756,10 @@ void AnalysisManager::FillPrimaryTruthTree(G4int sdId, std::string sdName)
       ActsHitsApproachID = 0;
       ActsHitsSensitiveID = 1;
       acts_hits_tree->Fill();
-
+  
       // Now fill the Acts particles tree
+
+      // Check if the particle is already in the ActsParticlesParticleId vector
       bool isDuplicate = false;
       for (const auto& id : ActsParticlesParticleId) {
         if (id == particleId.value()) {
@@ -750,7 +767,10 @@ void AnalysisManager::FillPrimaryTruthTree(G4int sdId, std::string sdName)
         }
       }
       if (isDuplicate) continue; // Skip this particle if it's already been added
+
+      std::cout << "Particle ID: " << particleId << " pdgc = " << hit->GetPDGID() << std::endl;
       
+      ActsParticlesPDGC.push_back(hit->GetPDGID());
       ActsParticlesParticleId.push_back(particleId.value());
       ActsParticlesParticleType.push_back(hit->GetPDGID());
       ActsParticlesProcess.push_back(0);
@@ -768,15 +788,15 @@ void AnalysisManager::FillPrimaryTruthTree(G4int sdId, std::string sdName)
       ActsParticlesPhi.push_back(hit->GetTrackP4().phi());
       ActsParticlesPt.push_back(pow(pow(hit->GetTrackP4().px(), 2) + pow(hit->GetTrackP4().py(), 2), 0.5));
       ActsParticlesP.push_back(pow(pow(hit->GetTrackP4().px(), 2) + pow(hit->GetTrackP4().py(), 2) + pow(hit->GetTrackP4().pz(), 2), 0.5));
-      ActsParticlesVertexPrimary.push_back(hit->GetIsPrimaryTrack()); //? These variables need to be filled, but are unused by Acts 
-      ActsParticlesVertexSecondary.push_back(hit->GetIsSecondaryTrack()); //? These variables need to be filled, but are unused by Acts 
-      ActsParticlesParticle.push_back(1); //? These variables need to be filled, but are unused by Acts 
-      ActsParticlesGeneration.push_back(0); //? These variables need to be filled, but are unused by Acts 
-      ActsParticlesSubParticle.push_back(0); //? These variables need to be filled, but are unused by Acts 
+      ActsParticlesVertexPrimary.push_back(hit->GetParentID()); //? These variables need to be filled, but are unused by Acts 
+      ActsParticlesVertexSecondary.push_back(0); //? These variables need to be filled, but are unused by Acts 
+      ActsParticlesParticle.push_back(abs(hit->GetPDGID())); //? These variables need to be filled, but are unused by Acts 
+      ActsParticlesGeneration.push_back(hit->GetParentID()); //? These variables need to be filled, but are unused by Acts 
+      ActsParticlesSubParticle.push_back(hitID); //? These variables need to be filled, but are unused by Acts 
       ActsParticlesELoss.push_back(0); //? These variables need to be filled, but are unused by Acts 
       ActsParticlesPathInX0.push_back(0); //? These variables need to be filled, but are unused by Acts 
       ActsParticlesPathInL0.push_back(0); //? These variables need to be filled, but are unused by Acts 
-      ActsParticlesNumberOfHits.push_back(0); //? These variables need to be filled, but are unused by Acts 
+      ActsParticlesNumberOfHits.push_back(particle_nhits_map[hit->GetTrackID()]);
       ActsParticlesOutcome.push_back(0); //? These variables need to be filled, but are unused by Acts 
     } // end of loop over hits
     acts_particles_tree->Fill();

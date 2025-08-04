@@ -193,6 +193,7 @@ class AnalysisManager {
     UInt_t ActsHitsEventID;
     ULong64_t ActsHitsGeometryID;
     ULong64_t ActsHitsParticleID;
+    Int_t ActsHitsPDGC;
     Float_t ActsHitsX;
     Float_t ActsHitsY;
     Float_t ActsHitsZ;
@@ -216,6 +217,7 @@ class AnalysisManager {
     std::vector<std::uint64_t> ActsParticlesParticleId;
     std::vector<std::int32_t> ActsParticlesParticleType;
     std::vector<std::uint32_t> ActsParticlesProcess;
+    std::vector<std::int32_t> ActsParticlesPDGC;
     std::vector<float> ActsParticlesVx;
     std::vector<float> ActsParticlesVy;
     std::vector<float> ActsParticlesVz;
